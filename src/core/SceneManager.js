@@ -73,18 +73,22 @@ export class SceneManager {
     this.camera.position.set(this.cameraPos.x, this.cameraPos.y, this.cameraPos.z);
     this.camera.lookAt(0, 0, 0);
 
+    const isMobile = window.innerWidth < 1024;
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5);
+
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
-      antialias: true,
+      antialias: dpr < 1.5,
       alpha: true,
       powerPreference: 'high-performance',
+      stencil: false,
+      depth: true,
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(dpr);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.enabled = false;
 
     this.modelContainer = new THREE.Group();
     this.scene.add(this.modelContainer);
@@ -165,10 +169,7 @@ export class SceneManager {
     // Primary Top-Right Studio Key Light
     this.keyLight = new THREE.DirectionalLight(0xf6f8fc, 1.85);
     this.keyLight.position.set(3.2, 4.8, 3.2);
-    this.keyLight.castShadow = true;
-    this.keyLight.shadow.mapSize.width = 2048;
-    this.keyLight.shadow.mapSize.height = 2048;
-    this.keyLight.shadow.bias = -0.0001;
+    this.keyLight.castShadow = false;
     this.scene.add(this.keyLight);
 
     // Restrained Cool Left Fill Light (preserves deep shadow gradient)
@@ -714,7 +715,9 @@ export class SceneManager {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const isMobile = window.innerWidth < 1024;
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5);
+    this.renderer.setPixelRatio(dpr);
   }
 
   async loadModel(key, url, scaleFactor = 1, yOffset = 0) {
@@ -764,8 +767,9 @@ export class SceneManager {
             }
 
             if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
+              child.castShadow = false;
+              child.receiveShadow = false;
+              child.frustumCulled = true;
 
               if (child.material) {
                 child.material = child.material.clone();
@@ -1545,7 +1549,8 @@ export class SceneManager {
   updateHotspots() {
     if (!this.hotspots || this.hotspots.length === 0) return;
 
-    const tempV = new THREE.Vector3();
+    if (!this._tempHotspotV) this._tempHotspotV = new THREE.Vector3();
+    const tempV = this._tempHotspotV;
 
     this.hotspots.forEach((spot) => {
       const el = document.getElementById(spot.elementId);
@@ -1572,6 +1577,8 @@ export class SceneManager {
 
   animate() {
     requestAnimationFrame(() => this.animate());
+
+    if (document.hidden) return;
 
     const delta = this.clock.getDelta();
     const isHero = window.scrollY < window.innerHeight * 0.7;
@@ -1616,7 +1623,8 @@ export class SceneManager {
     let relY = this.mouse.y;
 
     if (this.modelContainer) {
-      const modelScreenPos = new THREE.Vector3();
+      if (!this._modelScreenPos) this._modelScreenPos = new THREE.Vector3();
+      const modelScreenPos = this._modelScreenPos;
       this.modelContainer.getWorldPosition(modelScreenPos);
       modelScreenPos.project(this.camera);
 

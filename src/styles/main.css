@@ -84,7 +84,7 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Subtle Film Grain Overlay */
+/* Subtle Architectural Grain Overlay (Hardware-accelerated CSS Pattern, Zero Composite Cost) */
 .film-grain {
   position: fixed;
   top: 0;
@@ -93,8 +93,11 @@
   height: 100vh;
   pointer-events: none;
   z-index: 99;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.015;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 0);
+  background-size: 4px 4px;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* WebGL Background Canvas */
@@ -360,8 +363,6 @@
   background: linear-gradient(100deg, #3C3E44 0%, #35363C 28%, #2B2C31 68%, #202125 100%);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   color: #C4C1BE;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-size: 11px;

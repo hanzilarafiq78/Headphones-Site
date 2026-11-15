@@ -27,9 +27,16 @@ export function setupCursor() {
     </div>
   `;
 
+  cursor.style.top = '0px';
+  cursor.style.left = '0px';
+  cursor.style.willChange = 'transform';
+
   // Center Precision Core Crosshair
   const dot = document.createElement('div');
   dot.className = 'custom-cursor-dot hidden md:block';
+  dot.style.top = '0px';
+  dot.style.left = '0px';
+  dot.style.willChange = 'transform';
   dot.innerHTML = `
     <div class="core-crosshair">
       <span class="axis-h"></span>
@@ -54,12 +61,11 @@ export function setupCursor() {
     mouseX = e.clientX;
     mouseY = e.clientY;
 
-    dot.style.left = `${mouseX}px`;
-    dot.style.top = `${mouseY}px`;
+    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
 
     cursor.classList.remove('hidden-cursor');
     dot.classList.remove('hidden-cursor');
-  });
+  }, { passive: true });
 
   document.addEventListener('mouseleave', () => {
     cursor.classList.add('hidden-cursor');
@@ -91,8 +97,7 @@ export function setupCursor() {
     cursorX += (mouseX - cursorX) * 0.16;
     cursorY += (mouseY - cursorY) * 0.16;
 
-    cursor.style.left = `${cursorX}px`;
-    cursor.style.top = `${cursorY}px`;
+    cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
 
     // Dynamic mechanical rotation based on movement trajectory (subtle & damped)
     if (speed > 1.0) {

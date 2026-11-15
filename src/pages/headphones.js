@@ -603,33 +603,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => ripple.remove(), 950);
     });
 
-    // --- Magnetic hover effect for buttons (fluid, subtle, luxury damping) ---
+    // --- Magnetic hover effect for buttons (high-performance quickTo, zero GC allocations) ---
     const magneticButtons = document.querySelectorAll(
       '#nav-reserve-btn, .btn-hero-explore, #reserve-btn, .btn-footer-explore, #confirm-reserve, .color-btn, #back-to-top, #modal-close'
     );
 
     magneticButtons.forEach((btn) => {
       const strength = btn.classList.contains('color-btn') ? 0.10 : 0.08;
+      const setX = gsap.quickTo(btn, 'x', { duration: 0.6, ease: 'power3.out' });
+      const setY = gsap.quickTo(btn, 'y', { duration: 0.6, ease: 'power3.out' });
 
       btn.addEventListener('mousemove', (e) => {
         const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        gsap.to(btn, {
-          x: x * strength,
-          y: y * strength,
-          duration: 0.8,
-          ease: 'power3.out',
-        });
+        const x = (e.clientX - rect.left - rect.width / 2) * strength;
+        const y = (e.clientY - rect.top - rect.height / 2) * strength;
+        setX(x);
+        setY(y);
       });
 
       btn.addEventListener('mouseleave', () => {
-        gsap.to(btn, {
-          x: 0,
-          y: 0,
-          duration: 1.0,
-          ease: 'power3.out',
-        });
+        setX(0);
+        setY(0);
       });
     });
 
