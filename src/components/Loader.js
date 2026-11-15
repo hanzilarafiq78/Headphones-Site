@@ -4,9 +4,18 @@ export class AetherLoader {
   constructor() {
     this.container = null;
     this.isModelLoaded = false;
+    this.isRevealed = false;
     this.currentProgress = 0;
     this.createDOM();
     this.startProgress();
+
+    // Safety watchdog: ensure loader is never stuck on screen under any circumstance
+    this.safetyTimeout = setTimeout(() => {
+      if (!this.isRevealed) {
+        console.warn('Loader safety watchdog triggered - auto revealing hero');
+        this.revealHero();
+      }
+    }, 4500);
   }
 
   createDOM() {
@@ -113,12 +122,26 @@ export class AetherLoader {
 
   async complete() {
     this.isModelLoaded = true;
-    // Await the continuous 0% -> 100% progress sequence
-    await this.progressPromise;
-    // Seamless immediate transition into revealHero with zero artificial delay
+    // Await the continuous 0% -> 100% progress sequence with a 2.5s maximum timeout
+    await Promise.race([
+      this.progressPromise,
+      new Promise((r) => setTimeout(r, 2500)),
+    ]);
   }
 
   revealHero(elements = {}) {
+    if (this.isRevealed) return;
+    this.isRevealed = true;
+
+    if (this.safetyTimeout) {
+      clearTimeout(this.safetyTimeout);
+      this.safetyTimeout = null;
+    }
+
+    if (this.container) {
+      this.container.style.pointerEvents = 'none';
+    }
+
     const tl = gsap.timeline({
       onComplete: () => {
         if (this.container && this.container.parentNode) {
@@ -128,37 +151,43 @@ export class AetherLoader {
     });
 
     // 1. Center brand logo gently fades
-    tl.to(
-      this.center,
-      {
-        opacity: 0,
-        scale: 0.98,
-        duration: 0.45,
-        ease: 'power2.in',
-      },
-      0
-    );
+    if (this.center) {
+      tl.to(
+        this.center,
+        {
+          opacity: 0,
+          scale: 0.98,
+          duration: 0.45,
+          ease: 'power2.in',
+        },
+        0
+      );
+    }
 
     // 2. Dual Horizontal Shutter Reveal (Top curtain slides UP, Bottom curtain slides DOWN)
-    tl.to(
-      this.curtainTop,
-      {
-        yPercent: -100,
-        duration: 1.15,
-        ease: 'power3.inOut',
-      },
-      0.25
-    );
+    if (this.curtainTop) {
+      tl.to(
+        this.curtainTop,
+        {
+          yPercent: -100,
+          duration: 1.15,
+          ease: 'power3.inOut',
+        },
+        0.25
+      );
+    }
 
-    tl.to(
-      this.curtainBottom,
-      {
-        yPercent: 100,
-        duration: 1.15,
-        ease: 'power3.inOut',
-      },
-      0.25
-    );
+    if (this.curtainBottom) {
+      tl.to(
+        this.curtainBottom,
+        {
+          yPercent: 100,
+          duration: 1.15,
+          ease: 'power3.inOut',
+        },
+        0.25
+      );
+    }
 
     // 3. 3D Model subtle depth settling: camera smoothly eases into hero stance
     if (elements.sceneManager && elements.sceneManager.camera) {

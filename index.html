@@ -53,6 +53,21 @@
     </div>
   </div>
 
+  <script>
+    // Universal fail-safe: ensures the loading screen is never stuck under any circumstance
+    setTimeout(function () {
+      var l = document.getElementById('aether-loader');
+      if (l) {
+        l.style.transition = 'opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1)';
+        l.style.opacity = '0';
+        l.style.pointerEvents = 'none';
+        setTimeout(function () {
+          if (l && l.parentNode) l.parentNode.removeChild(l);
+        }, 700);
+      }
+    }, 4500);
+  </script>
+
   <!-- Precision Architectural Top Storyline Timeline -->
   <div id="top-timeline-track" title="Storyline Timeline">
     <div id="top-timeline-line"></div>

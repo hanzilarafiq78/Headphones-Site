@@ -15,7 +15,7 @@ if ('scrollRestoration' in history) {
 }
 window.scrollTo(0, 0);
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initHeadphones() {
   window.scrollTo(0, 0);
   const loader = new AetherLoader();
   const scrollRig = new ScrollRig();
@@ -29,44 +29,56 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sceneManager = new SceneManager(canvas);
   window.__sceneManager = sceneManager;
 
+  // Initial Hero Staging - Far Right Side Staging Matching Reference
+  sceneManager.modelPos = { x: 2.05, y: -0.23, z: 0 };
+  sceneManager.modelRot = { x: 0.20, y: 0.55, z: 0.08 };
+  sceneManager.cameraPos = { x: 0, y: 0, z: 4.6 };
+  sceneManager.cameraLookAt = { x: 0, y: 0, z: 0 };
+  sceneManager.setAcousticRings(0, 0, 0);
+
+  // Initial Overlay Setup using GSAP autoAlpha (hardware-accelerated in-place typography)
+  gsap.set(['#chapter-resonance', '#chapter-immersion', '#chapter-craft', '#chapter-finale'], {
+    y: 0,
+    scale: 1,
+    autoAlpha: 0,
+    pointerEvents: 'none',
+  });
+  // Set individual typography elements in place for pure fade-in reveals on scroll
+  gsap.set('.ch-eyebrow, .ch-headline, .ch-details, .ch-subhead, .ch-swatches, .ch-actions', {
+    y: 0,
+    scale: 1,
+    autoAlpha: 0,
+  });
+
+  gsap.set('#main-footer', {
+    yPercent: 100,
+    pointerEvents: 'none',
+  });
+  gsap.set('#chapter-hero', {
+    y: 0,
+    scale: 1,
+    autoAlpha: 1,
+    pointerEvents: 'auto',
+  });
+
   try {
-    await sceneManager.loadModel('headphones', '/models/headphones.glb', 0.894, 0);
-    sceneManager.displayModel('headphones');
+    // Load 3D model in parallel with the smooth progress meter
+    const modelPromise = sceneManager
+      .loadModel('headphones', '/models/headphones.glb', 0.894, 0)
+      .then(() => {
+        sceneManager.displayModel('headphones');
+      })
+      .catch((err) => {
+        console.warn('3D Model deferred or error:', err);
+      });
 
-    // Initial Hero Staging - Far Right Side Staging Matching Reference
-    sceneManager.modelPos = { x: 2.05, y: -0.23, z: 0 };
-    sceneManager.modelRot = { x: 0.20, y: 0.55, z: 0.08 };
-    sceneManager.cameraPos = { x: 0, y: 0, z: 4.6 };
-    sceneManager.cameraLookAt = { x: 0, y: 0, z: 0 };
-    sceneManager.setAcousticRings(0, 0, 0);
-
-    // Initial Overlay Setup using GSAP autoAlpha (hardware-accelerated in-place typography)
-    gsap.set(['#chapter-resonance', '#chapter-immersion', '#chapter-craft', '#chapter-finale'], {
-      y: 0,
-      scale: 1,
-      autoAlpha: 0,
-      pointerEvents: 'none',
-    });
-    // Set individual typography elements in place for pure fade-in reveals on scroll
-    gsap.set('.ch-eyebrow, .ch-headline, .ch-details, .ch-subhead, .ch-swatches, .ch-actions', {
-      y: 0,
-      scale: 1,
-      autoAlpha: 0,
-    });
-
-    gsap.set('#main-footer', {
-      yPercent: 100,
-      pointerEvents: 'none',
-    });
-    gsap.set('#chapter-hero', {
-      y: 0,
-      scale: 1,
-      autoAlpha: 1,
-      pointerEvents: 'auto',
-    });
+    // Wait for smooth progress animation and model loading with a 3.2s safety ceiling
+    await Promise.race([
+      Promise.all([loader.complete(), modelPromise]),
+      new Promise((resolve) => setTimeout(resolve, 3200)),
+    ]);
 
     // Luxury Entrance Reveal Sequence
-    await loader.complete();
     loader.revealHero({
       nav: '#main-nav',
       headline: '#chapter-hero h1',
@@ -877,5 +889,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   } catch (err) {
     console.error('Error initializing headphones page:', err);
+    try {
+      loader.revealHero();
+    } catch (e) {
+      document.getElementById('aether-loader')?.remove();
+    }
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHeadphones);
+} else {
+  initHeadphones();
+}
