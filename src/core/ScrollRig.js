@@ -11,13 +11,14 @@ export class ScrollRig {
 
   initLenis() {
     this.lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.55,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Apple-like smooth decel
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1.05,
-      touchMultiplier: 1.4,
+      wheelMultiplier: 0.82,
+      touchMultiplier: 1.15,
+      syncTouch: true,
       infinite: false,
     });
 

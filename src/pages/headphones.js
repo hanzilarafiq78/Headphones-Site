@@ -142,7 +142,7 @@ async function initHeadphones() {
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         const targetY = maxScroll * ratio;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(targetY, { duration: 1.6 });
+          scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
         } else {
           window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
@@ -152,9 +152,9 @@ async function initHeadphones() {
     // Explore Buttons (Hero & Nav) Smooth Scroll
     const handleExplore = (e) => {
       e.preventDefault();
-      const targetY = window.innerHeight * 2.2;
+      const targetY = window.innerHeight * 2.5;
       if (scrollRig && scrollRig.lenis) {
-        scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
+        scrollRig.lenis.scrollTo(targetY, { duration: 2.4 });
       } else {
         window.scrollTo({ top: targetY, behavior: 'smooth' });
       }
@@ -175,7 +175,7 @@ async function initHeadphones() {
         pinSpacing: false,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1.0,
+        scrub: 1.4,
         anticipatePin: 1,
         onUpdate: (self) => {
           const p = self.progress;
@@ -802,7 +802,7 @@ async function initHeadphones() {
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         const targetY = maxScroll * prog;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(targetY, { duration: 1.8 });
+          scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
         } else {
           window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
@@ -852,7 +852,7 @@ async function initHeadphones() {
         e.stopPropagation();
         gsap.to(sceneManager.dragRotation, {
           y: sceneManager.dragRotation.y + Math.PI * 2,
-          duration: 2.2,
+          duration: 2.4,
           ease: 'power2.inOut',
         });
       });
@@ -866,7 +866,7 @@ async function initHeadphones() {
       backToTopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(0, { duration: 1.8 });
+          scrollRig.lenis.scrollTo(0, { duration: 2.2 });
         } else {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -880,7 +880,7 @@ async function initHeadphones() {
         const track = document.getElementById('story-track');
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(maxScroll, { duration: 1.8 });
+          scrollRig.lenis.scrollTo(maxScroll, { duration: 2.2 });
         } else {
           window.scrollTo({ top: maxScroll, behavior: 'smooth' });
         }

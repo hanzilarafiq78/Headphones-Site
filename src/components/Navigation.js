@@ -64,7 +64,7 @@ export function setupNavigation(scrollRig) {
     const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
     const targetY = maxScroll * progress;
     if (scrollRig && scrollRig.lenis) {
-      scrollRig.lenis.scrollTo(targetY, { duration: 2.0 });
+      scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
     } else {
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
