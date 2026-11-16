@@ -58,14 +58,14 @@
     setTimeout(function () {
       var l = document.getElementById('aether-loader');
       if (l) {
-        l.style.transition = 'opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1)';
+        l.style.transition = 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
         l.style.opacity = '0';
         l.style.pointerEvents = 'none';
         setTimeout(function () {
           if (l && l.parentNode) l.parentNode.removeChild(l);
-        }, 700);
+        }, 1300);
       }
-    }, 4500);
+    }, 6500);
   </script>
 
   <!-- Precision Architectural Top Storyline Timeline -->
@@ -81,9 +81,9 @@
   <main class="relative z-20">
 
     <!-- ================================================================= -->
-    <!-- MASTER PINNED STORYTELLING CONTAINER (1200vh SCROLL CANVAS TRACK FOR OPTIMAL SLOW & SMOOTH RESPONSIVE PACING)  -->
+    <!-- MASTER PINNED STORYTELLING CONTAINER (1500vh SCROLL CANVAS TRACK FOR OPTIMAL SLOW & SMOOTH RESPONSIVE PACING)  -->
     <!-- ================================================================= -->
-    <div id="story-track" class="relative w-full h-[1200vh]">
+    <div id="story-track" class="relative w-full h-[1500vh]">
 
       <!-- PINNED VIEWPORT (STAYS LOCKED IN VIEWPORT DURING ENTIRE SCROLL VIA GSAP PIN) -->
       <div id="story-pinned" class="w-full h-[100dvh] overflow-hidden pointer-events-none z-20">

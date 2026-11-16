@@ -36,9 +36,9 @@ async function initHeadphones() {
   sceneManager.cameraLookAt = { x: 0, y: 0, z: 0 };
   sceneManager.setAcousticRings(0, 0, 0);
 
-  // Initial Overlay Setup using GSAP autoAlpha (hardware-accelerated in-place typography)
+  // Initial Overlay Setup using GSAP autoAlpha & gentle y offset for smooth entrance
   gsap.set(['#chapter-resonance', '#chapter-immersion', '#chapter-craft', '#chapter-finale'], {
-    y: 0,
+    y: 36,
     scale: 1,
     autoAlpha: 0,
     pointerEvents: 'none',
@@ -60,6 +60,10 @@ async function initHeadphones() {
     autoAlpha: 1,
     pointerEvents: 'auto',
   });
+  // Prime hero elements for the choreographed reveal
+  gsap.set(['#chapter-hero h1', '#chapter-hero p', '#chapter-hero .btn-hero-explore', '#chapter-hero .font-mono', '#main-nav', '#top-timeline-track'], {
+    opacity: 0,
+  });
 
   try {
     // Load 3D model in parallel with the smooth progress meter
@@ -74,10 +78,10 @@ async function initHeadphones() {
         return null;
       });
 
-    // Wait for smooth progress animation and model loading with a 5.0s safety ceiling
+    // Wait for smooth progress animation and model loading with a 6.0s safety ceiling
     await Promise.race([
       Promise.all([loader.complete(), modelPromise]),
-      new Promise((resolve) => setTimeout(resolve, 5000)),
+      new Promise((resolve) => setTimeout(resolve, 6000)),
     ]);
 
     // Ensure model is displayed in the scene
@@ -90,6 +94,7 @@ async function initHeadphones() {
       body: '#chapter-hero p',
       btn: '#chapter-hero .btn-hero-explore',
       badge: '#chapter-hero .font-mono',
+      timeline: '#top-timeline-track',
       sceneManager,
     });
 
@@ -147,19 +152,21 @@ async function initHeadphones() {
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         const targetY = maxScroll * ratio;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
+          scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
         } else {
           window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
       });
     }
 
-    // Explore Buttons (Hero & Nav) Smooth Scroll
+    // Explore Buttons (Hero & Nav) Smooth Scroll to Chapter 02
     const handleExplore = (e) => {
       e.preventDefault();
-      const targetY = window.innerHeight * 2.5;
+      const track = document.getElementById('story-track');
+      const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
+      const targetY = maxScroll * 0.21;
       if (scrollRig && scrollRig.lenis) {
-        scrollRig.lenis.scrollTo(targetY, { duration: 2.4 });
+        scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
       } else {
         window.scrollTo({ top: targetY, behavior: 'smooth' });
       }
@@ -180,20 +187,20 @@ async function initHeadphones() {
         pinSpacing: false,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1.4,
+        scrub: 2.0,
         anticipatePin: 1,
         onUpdate: (self) => {
           const p = self.progress;
 
           let nextChapterName = 'ARRIVAL';
           let nextChapterId = 'arrival';
-          if (p < 0.15) {
+          if (p < 0.12) {
             nextChapterName = 'ARRIVAL';
             nextChapterId = 'arrival';
-          } else if (p < 0.33) {
+          } else if (p < 0.30) {
             nextChapterName = 'RESONANCE';
             nextChapterId = 'resonance';
-          } else if (p < 0.51) {
+          } else if (p < 0.48) {
             nextChapterName = 'IMMERSION';
             nextChapterId = 'immersion';
           } else if (p < 0.76) {
@@ -207,16 +214,16 @@ async function initHeadphones() {
           if (chapterLabel && chapterLabel.textContent !== nextChapterName) {
             gsap.killTweensOf(chapterLabel);
             gsap.to(chapterLabel, {
-              opacity: 0.2,
-              y: -2,
-              duration: 0.25,
+              opacity: 0,
+              y: -4,
+              duration: 0.35,
               ease: 'power2.in',
               onComplete: () => {
                 chapterLabel.textContent = nextChapterName;
                 gsap.to(chapterLabel, {
                   opacity: 1,
                   y: 0,
-                  duration: 0.45,
+                  duration: 0.55,
                   ease: 'power2.out',
                 });
               },
@@ -229,69 +236,71 @@ async function initHeadphones() {
     window.__masterTimeline = masterTimeline;
 
     // -------------------------------------------------------------------------
-    // SEGMENT 01: HERO / ARRIVAL (0 - 56)
+    // SEGMENT 01: HERO / ARRIVAL (0 - 90)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Previous section text fades out slowly and smoothly on scroll in place
+      // Chapter 01 gently drifts upward and dissolves smoothly
       .to('#chapter-hero', {
+        y: -30,
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 22)
-      .set('#chapter-hero', { pointerEvents: 'none' }, 56);
+        duration: 45,
+      }, 45)
+      .set('#chapter-hero', { pointerEvents: 'none' }, 90);
 
     // -------------------------------------------------------------------------
-    // SEGMENT 02: SCULPTURAL RESONANCE (36 - 138)
+    // SEGMENT 02: SCULPTURAL RESONANCE (75 - 225)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Next section text appears in place with smooth fade in on scroll
-      .set('#chapter-resonance', { pointerEvents: 'auto' }, 36)
-      .to('#chapter-resonance', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 36,
-      }, 36)
-      .to('#chapter-resonance .ch-eyebrow', {
-        autoAlpha: 1,
-        letterSpacing: '0.28em',
-        ease: 'sine.out',
-        duration: 30,
-      }, 36)
-      .to('#chapter-resonance .ch-headline', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 34,
-      }, 38)
-      .to('#chapter-resonance .ch-details', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 34,
-      }, 42)
-      // Model & Camera glide smoothly into resonance portrait
+      // Model & Camera glide unhurriedly into resonance portrait (45 to 125, duration: 80)
       .to(sceneManager.modelPos, {
         x: 1.38,
         y: -0.08,
         z: 0.0,
         ease: 'sine.inOut',
-        duration: 40,
-      }, 32)
+        duration: 80,
+      }, 45)
       .to(sceneManager.modelRot, {
         x: 0.15,
         y: 0.27,
         z: 0.0,
         ease: 'sine.inOut',
-        duration: 40,
-      }, 32)
+        duration: 80,
+      }, 45)
       .to(sceneManager.cameraPos, {
         z: 4.95,
         ease: 'sine.inOut',
+        duration: 80,
+      }, 45)
+      // Chapter 02 ascends gracefully from below as Hero clears
+      .set('#chapter-resonance', { pointerEvents: 'auto' }, 80)
+      .to('#chapter-resonance', {
+        y: 0,
+        autoAlpha: 1,
+        ease: 'sine.out',
+        duration: 48,
+      }, 80)
+      .to('#chapter-resonance .ch-eyebrow', {
+        autoAlpha: 1,
+        letterSpacing: '0.28em',
+        ease: 'sine.out',
         duration: 40,
-      }, 32)
+      }, 80)
+      .to('#chapter-resonance .ch-headline', {
+        autoAlpha: 1,
+        ease: 'sine.out',
+        duration: 44,
+      }, 84)
+      .to('#chapter-resonance .ch-details', {
+        autoAlpha: 1,
+        ease: 'sine.out',
+        duration: 44,
+      }, 90)
       // Expand concentric acoustic rings gracefully
       .to({ ringP: 0, ringA: 0 }, {
         ringP: 1.0,
         ringA: 0.95,
-        duration: 36,
+        duration: 55,
         ease: 'sine.inOut',
         onUpdate: function () {
           const vals = this.targets()[0];
@@ -300,66 +309,68 @@ async function initHeadphones() {
           if (resonanceGaugeFill) resonanceGaugeFill.style.width = `${gaugePct}%`;
           if (resonanceGaugeNode) resonanceGaugeNode.style.left = `${gaugePct}%`;
         },
-      }, 44)
-      // Previous section text fades out slowly and smoothly on scroll in place
+      }, 90)
+      // Chapter 02 exits gracefully with upward drift
       .to('#chapter-resonance', {
+        y: -30,
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 108)
-      .set('#chapter-resonance', { pointerEvents: 'none' }, 142);
+        duration: 45,
+      }, 175)
+      .set('#chapter-resonance', { pointerEvents: 'none' }, 220);
 
     // -------------------------------------------------------------------------
-    // SEGMENT 03: THE SENSORY VOID / IMMERSION (116 - 218)
+    // SEGMENT 03: THE SENSORY VOID / IMMERSION (205 - 355)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Next section text appears in place with smooth fade in on scroll
-      .set('#chapter-immersion', { pointerEvents: 'auto' }, 118)
-      .to('#chapter-immersion', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 36,
-      }, 118)
-      .to('#chapter-immersion .ch-eyebrow', {
-        autoAlpha: 1,
-        letterSpacing: '0.28em',
-        ease: 'sine.out',
-        duration: 30,
-      }, 118)
-      .to('#chapter-immersion .ch-headline', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 34,
-      }, 120)
-      .to('#chapter-immersion .ch-details', {
-        autoAlpha: 1,
-        ease: 'sine.out',
-        duration: 34,
-      }, 124)
-      // Model & Camera ease gracefully from right to left side
+      // Model & Camera glide smoothly from right to left across the screen (165 to 245, duration: 80)
       .to(sceneManager.modelPos, {
         x: -0.92,
         y: -0.06,
         z: 0.05,
         ease: 'sine.inOut',
-        duration: 44,
-      }, 110)
+        duration: 80,
+      }, 165)
       .to(sceneManager.modelRot, {
         x: 0.08,
         y: 0.22,
         z: 0.04,
         ease: 'sine.inOut',
-        duration: 44,
-      }, 110)
+        duration: 80,
+      }, 165)
       .to(sceneManager.cameraPos, {
         z: 4.35,
         ease: 'sine.inOut',
+        duration: 80,
+      }, 165)
+      // Chapter 03 enters smoothly from below on the right side
+      .set('#chapter-immersion', { pointerEvents: 'auto' }, 205)
+      .to('#chapter-immersion', {
+        y: 0,
+        autoAlpha: 1,
+        ease: 'sine.out',
+        duration: 48,
+      }, 205)
+      .to('#chapter-immersion .ch-eyebrow', {
+        autoAlpha: 1,
+        letterSpacing: '0.28em',
+        ease: 'sine.out',
+        duration: 40,
+      }, 205)
+      .to('#chapter-immersion .ch-headline', {
+        autoAlpha: 1,
+        ease: 'sine.out',
         duration: 44,
-      }, 110)
+      }, 209)
+      .to('#chapter-immersion .ch-details', {
+        autoAlpha: 1,
+        ease: 'sine.out',
+        duration: 44,
+      }, 215)
       // Align portal rings & update decibel readout smoothly
       .to({ portal: 0 }, {
         portal: 1.0,
-        duration: 36,
+        duration: 55,
         ease: 'sine.inOut',
         onUpdate: function () {
           const vals = this.targets()[0];
@@ -370,220 +381,221 @@ async function initHeadphones() {
           if (decouplingBar) decouplingBar.style.width = `${pct}%`;
           if (decouplingNode) decouplingNode.style.left = `${pct}%`;
         },
-      }, 124)
-      // Previous section text fades out slowly and smoothly on scroll in place
+      }, 215)
+      // Chapter 03 exits gracefully with upward drift
       .to('#chapter-immersion', {
+        y: -30,
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 188)
-      .set('#chapter-immersion', { pointerEvents: 'none' }, 222);
+        duration: 45,
+      }, 305)
+      .set('#chapter-immersion', { pointerEvents: 'none' }, 350);
 
     // Track shared explode state object for bidirectional scrub precision
     const explodeState = { value: 0 };
 
     // -------------------------------------------------------------------------
-    // SEGMENT 04: ANATOMICAL DECONSTRUCTION / CRAFT (196 - 338)
+    // SEGMENT 04: ANATOMICAL DECONSTRUCTION / CRAFT (335 - 560)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Transition model from Chapter 03 to Chapter 04 - perfectly assembled at first
+      // Model & Camera transition smoothly from left to right side (295 to 365, duration: 70)
       .to(sceneManager.modelPos, {
         x: 0.98,
         y: -0.06,
         z: 0.0,
         ease: 'sine.inOut',
-        duration: 36,
-      }, 190)
+        duration: 70,
+      }, 295)
       .to(sceneManager.modelRot, {
         x: 0.05,
         y: Math.PI * 0.5 - 0.16,
         z: 0.0,
         ease: 'sine.inOut',
-        duration: 36,
-      }, 190)
+        duration: 70,
+      }, 295)
       .to(sceneManager.cameraPos, {
         z: 4.65,
         ease: 'sine.inOut',
-        duration: 36,
-      }, 190)
-      // Dissolve acoustic rings slowly
+        duration: 70,
+      }, 295)
+      // Dissolve acoustic rings smoothly
       .to({ ringDissolve: 1 }, {
         ringDissolve: 0,
-        duration: 28,
+        duration: 55,
         ease: 'sine.out',
         onUpdate: function () {
           const r = this.targets()[0].ringDissolve;
           sceneManager.setAcousticRings(1.0, 1.0, r * 0.95);
         },
-      }, 190)
-      // Ensure model starts 100% assembled
+      }, 295)
+      // Ensure model starts assembled
       .call(() => {
         explodeState.value = 0;
         sceneManager.setExplode(0);
-      }, null, 192)
-      // Next section text appears in place with smooth fade in on scroll
-      .set('#chapter-craft', { pointerEvents: 'auto' }, 202)
+      }, null, 300)
+      // Chapter 04 enters smoothly from below
+      .set('#chapter-craft', { pointerEvents: 'auto' }, 335)
       .to('#chapter-craft', {
+        y: 0,
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 36,
-      }, 202)
+        duration: 48,
+      }, 335)
       .to('#chapter-craft .ch-eyebrow', {
         autoAlpha: 1,
         letterSpacing: '0.28em',
         ease: 'sine.out',
-        duration: 30,
-      }, 202)
+        duration: 40,
+      }, 335)
       .to('#chapter-craft .ch-headline', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 34,
-      }, 204)
+        duration: 44,
+      }, 339)
       .to('#chapter-craft .ch-details', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 34,
-      }, 208)
-      // ULTRA SMOOTH, EXPANSIVE BREAKDOWN WITH 360 ROTATION (228 to 276)
+        duration: 44,
+      }, 345)
+      // EXPANSIVE ANATOMICAL BREAKDOWN WITH 360 ROTATION (380 to 445, duration: 65)
       .to(explodeState, {
         value: 1.0,
         ease: 'sine.inOut',
-        duration: 48,
+        duration: 65,
         onUpdate: () => {
           sceneManager.setExplode(explodeState.value);
         },
-      }, 228)
+      }, 380)
       .to(sceneManager.modelRot, {
         x: 0.06,
         y: (Math.PI * 0.5 - 0.16) + Math.PI * 2.0,
         z: 0.0,
         ease: 'sine.inOut',
-        duration: 48,
-      }, 228)
+        duration: 65,
+      }, 380)
       .to(sceneManager.modelPos, {
         x: 0.98,
         y: -0.05,
         z: 0.02,
         ease: 'sine.inOut',
-        duration: 48,
-      }, 228)
-      // Smooth, unhurried precision reassembly
+        duration: 65,
+      }, 380)
+      // UNHURRIED PRECISION REASSEMBLY (465 to 525, duration: 60 - fully matching explosion pacing)
       .to(explodeState, {
         value: 0.0,
         ease: 'sine.inOut',
-        duration: 24,
+        duration: 60,
         onUpdate: () => {
           sceneManager.setExplode(explodeState.value);
         },
-      }, 276)
-      // Previous section text fades out slowly and smoothly on scroll in place
+      }, 465)
+      // Chapter 04 exits smoothly with upward drift
       .to('#chapter-craft', {
+        y: -30,
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 300)
-      .set('#chapter-craft', { pointerEvents: 'none' }, 334);
+        duration: 45,
+      }, 515)
+      .set('#chapter-craft', { pointerEvents: 'none' }, 560);
 
     // -------------------------------------------------------------------------
-    // SEGMENT 05: THE ARTIFACT & FINALE (316 - 392)
+    // SEGMENT 05: THE ARTIFACT & FINALE (545 - 655)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Pull back to iconic 3/4 product portrait - far right side
+      // Smoothly reposition model and camera into iconic 3/4 hero portrait (515 to 585, duration: 70)
       .to(sceneManager.modelPos, {
         x: 1.95,
         y: -0.16,
         z: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 312)
+        duration: 70,
+      }, 515)
       .to(sceneManager.modelRot, {
         x: 0.16,
         y: Math.PI * 4.0 + 0.42,
         z: 0.04,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 312)
+        duration: 70,
+      }, 515)
       .to(sceneManager.cameraPos, {
         z: 4.8,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 312)
+        duration: 70,
+      }, 515)
       .to(sceneManager.cameraLookAt, {
         x: 0,
         y: -0.05,
         z: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 312)
-      .call(() => {
-        sceneManager.setAcousticRings(0, 0, 0);
-      }, null, 314)
-      // Next section text appears in place with smooth fade in on scroll
-      .set('#chapter-finale', { pointerEvents: 'auto' }, 316)
+        duration: 70,
+      }, 515)
+      // Chapter 05 enters smoothly from below
+      .set('#chapter-finale', { pointerEvents: 'auto' }, 545)
       .to('#chapter-finale', {
+        y: 0,
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 36,
-      }, 316)
+        duration: 48,
+      }, 545)
       .to('#chapter-finale .ch-eyebrow', {
         autoAlpha: 1,
         letterSpacing: '0.28em',
         ease: 'sine.out',
-        duration: 30,
-      }, 316)
+        duration: 40,
+      }, 545)
       .to('#chapter-finale .ch-headline', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 34,
-      }, 318)
+        duration: 44,
+      }, 549)
       .to('#chapter-finale .ch-subhead', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 32,
-      }, 322)
+        duration: 42,
+      }, 555)
       .to('#chapter-finale .ch-swatches', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 32,
-      }, 326)
+        duration: 42,
+      }, 561)
       .to('#chapter-finale .ch-actions', {
         autoAlpha: 1,
         ease: 'sine.out',
-        duration: 32,
-      }, 330);
+        duration: 42,
+      }, 567);
 
     // -------------------------------------------------------------------------
-    // SEGMENT 06: THE BLANKET FOOTER OVERLAY (356 - 432)
-    // Chapter 05 slowly and smoothly disappears while the footer rises over it like a blanket
+    // SEGMENT 06: THE BLANKET FOOTER OVERLAY (645 - 725)
     // -------------------------------------------------------------------------
     masterTimeline
-      // Chapter 05 text slowly and smoothly dissolves in place as the footer blanket glides up
+      // Chapter 05 text dissolves and drifts upward as the blanket rises
       .to('#chapter-finale', {
+        y: -30,
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 34,
-      }, 356)
-      .set('#chapter-finale', { pointerEvents: 'none' }, 388)
+        duration: 45,
+      }, 645)
+      .set('#chapter-finale', { pointerEvents: 'none' }, 690)
       // Bottom-right pinned HUD label fades out smoothly
       .to('#pinned-chapter-label', {
         autoAlpha: 0,
         ease: 'sine.inOut',
-        duration: 24,
-      }, 356)
+        duration: 32,
+      }, 645)
       // 3D model gently recedes into shadow as the blanket covers it
       .to(sceneManager.modelPos, {
         y: -0.28,
         z: -0.35,
         ease: 'sine.inOut',
-        duration: 32,
-      }, 356)
-      // The footer rises smoothly and slowly over Chapter 05 like a blanket
+        duration: 50,
+      }, 645)
+      // The footer rises smoothly and slowly over Chapter 05 like a luxurious blanket
       .to('#main-footer', {
         yPercent: 0,
         pointerEvents: 'auto',
         ease: 'power2.out',
-        duration: 48,
-      }, 356);
+        duration: 75,
+      }, 645);
 
     // =========================================================================
     // MICRO-INTERACTIONS ENGINE
@@ -785,10 +797,10 @@ async function initHeadphones() {
     const footerStoryLinks = document.querySelectorAll('.nav-chapter-link');
     const CHAPTER_PROGRESS = {
       arrival: 0.0,
-      resonance: 0.20,
-      immersion: 0.40,
-      craft: 0.58,
-      artifact: 0.82,
+      resonance: 0.21,
+      immersion: 0.39,
+      craft: 0.59,
+      artifact: 0.85,
       specs: 1.0,
     };
     footerStoryLinks.forEach((link) => {
@@ -800,7 +812,7 @@ async function initHeadphones() {
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         const targetY = maxScroll * prog;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
+          scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
         } else {
           window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
@@ -865,7 +877,7 @@ async function initHeadphones() {
       backToTopBtn.addEventListener('click', (e) => {
         e.preventDefault();
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(0, { duration: 2.2 });
+          scrollRig.lenis.scrollTo(0, { duration: 2.6 });
         } else {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -879,7 +891,7 @@ async function initHeadphones() {
         const track = document.getElementById('story-track');
         const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
         if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(maxScroll, { duration: 2.2 });
+          scrollRig.lenis.scrollTo(maxScroll, { duration: 2.6 });
         } else {
           window.scrollTo({ top: maxScroll, behavior: 'smooth' });
         }

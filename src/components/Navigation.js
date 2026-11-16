@@ -8,10 +8,10 @@ export function setupNavigation(scrollRig) {
 
   const chapters = [
     { name: 'ARRIVAL', id: 'arrival', progress: 0.0 },
-    { name: 'RESONANCE', id: 'resonance', progress: 0.20 },
-    { name: 'IMMERSION', id: 'immersion', progress: 0.40 },
-    { name: 'CRAFT', id: 'craft', progress: 0.58 },
-    { name: 'ARTIFACT', id: 'artifact', progress: 0.82 },
+    { name: 'RESONANCE', id: 'resonance', progress: 0.21 },
+    { name: 'IMMERSION', id: 'immersion', progress: 0.39 },
+    { name: 'CRAFT', id: 'craft', progress: 0.59 },
+    { name: 'ARTIFACT', id: 'artifact', progress: 0.85 },
   ];
 
   navContainer.className = 'fixed top-0 left-0 w-full z-50 pointer-events-auto bg-transparent border-none transition-all duration-500 ease-out';
@@ -64,7 +64,7 @@ export function setupNavigation(scrollRig) {
     const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
     const targetY = maxScroll * progress;
     if (scrollRig && scrollRig.lenis) {
-      scrollRig.lenis.scrollTo(targetY, { duration: 2.2 });
+      scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
     } else {
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
