@@ -62,16 +62,16 @@
     setTimeout(function () {
       var l = document.getElementById('aether-loader');
       if (l) {
-        l.style.transition = 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
+        l.style.transition = 'opacity 0.8s ease';
         l.style.opacity = '0';
         l.style.pointerEvents = 'none';
         setTimeout(function () {
           if (l && l.parentNode) l.parentNode.removeChild(l);
-        }, 1300);
+        }, 850);
+        var heroEls = document.querySelectorAll('#chapter-hero h1, #chapter-hero p, #chapter-hero .btn-hero-explore, #chapter-hero .font-mono, #main-nav, #top-timeline-track');
+        heroEls.forEach(function (el) { el.style.opacity = '1'; });
       }
-      var heroEls = document.querySelectorAll('#chapter-hero h1, #chapter-hero p, #chapter-hero .btn-hero-explore, #chapter-hero .font-mono, #main-nav, #top-timeline-track');
-      heroEls.forEach(function (el) { el.style.opacity = '1'; });
-    }, 5000);
+    }, 6000);
   </script>
 
   <!-- Precision Architectural Top Storyline Timeline -->

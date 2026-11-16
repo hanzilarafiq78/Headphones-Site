@@ -15,7 +15,12 @@ if ('scrollRestoration' in history) {
 }
 window.scrollTo(0, 0);
 
+let isHeadphonesInitialized = false;
+
 async function initHeadphones() {
+  if (isHeadphonesInitialized) return;
+  isHeadphonesInitialized = true;
+
   window.scrollTo(0, 0);
   const loader = new AetherLoader();
   const scrollRig = new ScrollRig();
@@ -929,7 +934,7 @@ async function initHeadphones() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initHeadphones);
+  document.addEventListener('DOMContentLoaded', initHeadphones, { once: true });
 } else {
   initHeadphones();
 }
