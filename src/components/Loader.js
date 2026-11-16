@@ -3,9 +3,10 @@ import gsap from 'gsap';
 export class AetherLoader {
   constructor() {
     this.container = null;
-    this.isModelLoaded = false;
     this.isRevealed = false;
     this.currentProgress = 0;
+    this.targetProgress = 12;
+    this.isCompleting = false;
     this.createDOM();
     this.startProgress();
 
@@ -15,7 +16,7 @@ export class AetherLoader {
         console.warn('Loader safety watchdog triggered - auto revealing hero');
         this.revealHero();
       }
-    }, 6000);
+    }, 4500);
   }
 
   createDOM() {
@@ -57,7 +58,7 @@ export class AetherLoader {
             <!-- Refined Hairline Gauge -->
             <div class="w-44 sm:w-56 h-[2px] bg-white/[0.08] relative rounded-full overflow-hidden">
               <div class="loader-meter-bar absolute top-0 left-0 h-full w-0 rounded-full"
-                   style="background: linear-gradient(90deg, rgba(142, 147, 158, 0.4) 0%, #ECEBE8 100%); box-shadow: 0 0 10px rgba(236, 235, 232, 0.6); will-change: width; transition: width 0.05s linear;">
+                   style="background: linear-gradient(90deg, rgba(142, 147, 158, 0.4) 0%, #ECEBE8 100%); box-shadow: 0 0 10px rgba(236, 235, 232, 0.6); will-change: width;">
               </div>
             </div>
           </div>
@@ -75,73 +76,105 @@ export class AetherLoader {
     this.statusEl = this.container.querySelector('.loader-status');
   }
 
+  setUIProgress(val) {
+    const clamped = Math.min(100, Math.max(0, Math.floor(val)));
+    this.currentProgress = clamped;
+    if (this.meterBar) this.meterBar.style.width = `${clamped}%`;
+    if (this.percentEl) this.percentEl.textContent = `${clamped}%`;
+    if (this.statusEl) {
+      if (clamped >= 100) {
+        this.statusEl.textContent = 'READY';
+      } else if (clamped >= 80) {
+        this.statusEl.textContent = 'STAGING';
+      } else if (clamped >= 40) {
+        this.statusEl.textContent = 'INITIALIZING';
+      } else {
+        this.statusEl.textContent = 'CALIBRATING';
+      }
+    }
+  }
+
   startProgress() {
-    // 1.55 seconds of continuous, monotonic precision calibration progression from 0 to 100
-    const duration = 1550;
+    this.targetProgress = 25;
     const startTime = performance.now();
 
-    this.progressPromise = new Promise((resolve) => {
-      const step = (now) => {
-        const elapsed = now - startTime;
-        const rawT = Math.min(1, Math.max(0, elapsed / duration));
+    const updateLoop = (now) => {
+      if (this.isRevealed) return;
 
-        // Smooth deceleration curve: continuous, zero stutter, zero stoppage
-        const eased = 1 - Math.pow(1 - rawT, 2.4);
-        const val = Math.min(100, Math.floor(eased * 100));
+      const elapsed = now - startTime;
+      if (!this.isCompleting) {
+        // Natural progression asymptotic toward 88% while assets load
+        const simulated = Math.min(88, Math.floor(18 + 70 * (1 - Math.exp(-elapsed / 1200))));
+        this.targetProgress = Math.max(this.targetProgress, simulated);
+      }
 
-        this.currentProgress = val;
-        if (this.meterBar) {
-          this.meterBar.style.width = `${eased * 100}%`;
-        }
-        if (this.percentEl) {
-          this.percentEl.textContent = `${val}%`;
-        }
-        if (this.statusEl) {
-          if (val >= 85) {
-            this.statusEl.textContent = 'STAGING';
-          } else if (val >= 45) {
-            this.statusEl.textContent = 'INITIALIZING';
-          } else {
-            this.statusEl.textContent = 'CALIBRATING';
-          }
-        }
+      // Smooth interpolation toward targetProgress
+      const diff = this.targetProgress - this.currentProgress;
+      if (Math.abs(diff) > 0.4) {
+        this.setUIProgress(this.currentProgress + diff * 0.22);
+      } else if (this.isCompleting && this.targetProgress >= 100) {
+        this.setUIProgress(100);
+        return;
+      }
 
-        if (rawT < 1) {
-          requestAnimationFrame(step);
-        } else {
-          if (this.statusEl) this.statusEl.textContent = 'READY';
-          if (this.percentEl) this.percentEl.textContent = '100%';
-          if (this.meterBar) this.meterBar.style.width = '100%';
+      requestAnimationFrame(updateLoop);
+    };
 
-          // Subtle breathing pause (340ms) allowing the user to perceive completion
-          // before the opening sequence gracefully unfolds
-          setTimeout(() => {
-            resolve();
-          }, 340);
-        }
-      };
+    requestAnimationFrame(updateLoop);
+  }
 
-      requestAnimationFrame(step);
-    });
+  updateDownloadProgress(ratio) {
+    if (this.isCompleting) return;
+    const modelPercent = Math.min(92, Math.floor(ratio * 92));
+    this.targetProgress = Math.max(this.targetProgress, modelPercent);
   }
 
   async complete() {
-    this.isModelLoaded = true;
-    // Await the continuous 0% -> 100% progress sequence with a 3.5s maximum timeout
-    await Promise.race([
-      this.progressPromise,
-      new Promise((r) => setTimeout(r, 3500)),
-    ]);
+    this.isCompleting = true;
+    this.targetProgress = 100;
+
+    return new Promise((resolve) => {
+      const checkDone = () => {
+        if (this.currentProgress >= 99 || this.isRevealed) {
+          this.setUIProgress(100);
+          // Very brief pause (160ms) so user registers "READY 100%" before the shutter reveal
+          setTimeout(resolve, 160);
+        } else {
+          this.setUIProgress(this.currentProgress + (100 - this.currentProgress) * 0.32);
+          requestAnimationFrame(checkDone);
+        }
+      };
+      requestAnimationFrame(checkDone);
+    });
   }
 
   revealHero(elements = {}) {
-    if (this.isRevealed) return;
-    this.isRevealed = true;
-
     if (this.safetyTimeout) {
       clearTimeout(this.safetyTimeout);
       this.safetyTimeout = null;
     }
+
+    // Default target selectors to guarantee the hero section is NEVER invisible
+    const targets = {
+      nav: elements.nav || '#main-nav',
+      headline: elements.headline || '#chapter-hero h1',
+      body: elements.body || '#chapter-hero p',
+      btn: elements.btn || '#chapter-hero .btn-hero-explore',
+      badge: elements.badge || '#chapter-hero .font-mono',
+      timeline: elements.timeline || '#top-timeline-track',
+      sceneManager: elements.sceneManager || window.__sceneManager,
+    };
+
+    if (this.isRevealed) {
+      // Curtains already parted - ensure any target elements are visible immediately
+      [targets.nav, targets.headline, targets.body, targets.btn, targets.badge, targets.timeline].forEach((sel) => {
+        if (sel) {
+          gsap.to(sel, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+        }
+      });
+      return;
+    }
+    this.isRevealed = true;
 
     if (this.container) {
       this.container.style.pointerEvents = 'none';
@@ -169,7 +202,7 @@ export class AetherLoader {
           {
             opacity: 0,
             y: 6,
-            duration: 0.65,
+            duration: 0.45,
             ease: 'power2.out',
           },
           0
@@ -183,10 +216,10 @@ export class AetherLoader {
           {
             opacity: 0,
             y: -6,
-            duration: 0.85,
+            duration: 0.60,
             ease: 'power2.out',
           },
-          0.06
+          0.04
         );
       }
 
@@ -197,7 +230,7 @@ export class AetherLoader {
           {
             opacity: 0,
             scale: 1.15,
-            duration: 1.0,
+            duration: 0.8,
             ease: 'sine.out',
           },
           0
@@ -206,9 +239,8 @@ export class AetherLoader {
     }
 
     // 2. Dual Horizontal Shutter Reveal: unhurried, silky cinematic parting
-    // Using power2.inOut for gradual acceleration and decelerated settle (eliminates abrupt snapping)
-    const curtainDuration = 1.85;
-    const curtainStart = 0.35;
+    const curtainDuration = 1.6;
+    const curtainStart = 0.25;
 
     if (this.curtainTop) {
       tl.to(
@@ -240,37 +272,34 @@ export class AetherLoader {
         [this.curtainTop, this.curtainBottom].filter(Boolean),
         {
           opacity: 0,
-          duration: 0.65,
+          duration: 0.55,
           ease: 'power1.out',
         },
-        curtainStart + curtainDuration - 0.65
+        curtainStart + curtainDuration - 0.55
       );
     }
 
     // 3. 3D Model subtle depth settling: camera smoothly glides into hero focal stance
-    if (elements.sceneManager) {
-      const sm = elements.sceneManager;
+    const sm = targets.sceneManager;
+    if (sm) {
       const targetZ = sm.cameraPos.z;
       const startZ = targetZ + 0.28;
 
-      // Start slightly backed out in depth
       sm.cameraPos.z = startZ;
       if (sm.camera) {
         sm.camera.position.z = startZ;
       }
 
-      // Smooth camera position glide into hero focal plane
       tl.to(
         sm.cameraPos,
         {
           z: targetZ,
-          duration: 2.6,
+          duration: 2.2,
           ease: 'power2.out',
         },
         curtainStart
       );
 
-      // Microscopic rotational settle: model eases smoothly to its resting hero angle
       const targetRotY = sm.modelRot.y;
       const startRotY = targetRotY - 0.05;
       sm.modelRot.y = startRotY;
@@ -282,68 +311,67 @@ export class AetherLoader {
         sm.modelRot,
         {
           y: targetRotY,
-          duration: 2.8,
+          duration: 2.4,
           ease: 'power2.out',
         },
         curtainStart
       );
     }
 
-    // 4. Hero typography, navigation and top timeline emerge smoothly with restrained displacement
-    // Text elements begin gracefully appearing once the shutter opening is well underway
-    const textStart = 0.88;
+    // 4. Hero typography, navigation and top timeline emerge smoothly
+    const textStart = 0.70;
 
-    if (elements.nav) {
+    if (targets.nav) {
       tl.fromTo(
-        elements.nav,
+        targets.nav,
         { y: -10, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.4, ease: 'power2.out' },
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power2.out' },
         textStart
       );
     }
 
-    if (elements.headline) {
+    if (targets.headline) {
       tl.fromTo(
-        elements.headline,
+        targets.headline,
         { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.5, ease: 'power2.out' },
-        textStart + 0.12
-      );
-    }
-
-    if (elements.body) {
-      tl.fromTo(
-        elements.body,
-        { y: 12, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.4, ease: 'power2.out' },
-        textStart + 0.28
-      );
-    }
-
-    if (elements.btn) {
-      tl.fromTo(
-        elements.btn,
-        { y: 10, opacity: 0 },
         { y: 0, opacity: 1, duration: 1.3, ease: 'power2.out' },
+        textStart + 0.10
+      );
+    }
+
+    if (targets.body) {
+      tl.fromTo(
+        targets.body,
+        { y: 12, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power2.out' },
+        textStart + 0.22
+      );
+    }
+
+    if (targets.btn) {
+      tl.fromTo(
+        targets.btn,
+        { y: 10, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power2.out' },
+        textStart + 0.34
+      );
+    }
+
+    if (targets.badge) {
+      tl.fromTo(
+        targets.badge,
+        { y: 8, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power2.out' },
         textStart + 0.42
       );
     }
 
-    if (elements.badge) {
+    if (targets.timeline) {
       tl.fromTo(
-        elements.badge,
-        { y: 8, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.3, ease: 'power2.out' },
-        textStart + 0.52
-      );
-    }
-
-    if (elements.timeline) {
-      tl.fromTo(
-        elements.timeline,
+        targets.timeline,
         { opacity: 0 },
-        { opacity: 1, duration: 1.3, ease: 'power2.out' },
-        textStart + 0.35
+        { opacity: 1, duration: 1.2, ease: 'power2.out' },
+        textStart + 0.28
       );
     }
 

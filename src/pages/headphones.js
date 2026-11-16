@@ -68,7 +68,9 @@ async function initHeadphones() {
   try {
     // Load 3D model in parallel with the smooth progress meter
     const modelPromise = sceneManager
-      .loadModel('headphones', '/models/headphones.glb', 0.894, 0)
+      .loadModel('headphones', '/models/headphones.glb', 0.894, 0, (ratio) => {
+        loader.updateDownloadProgress(ratio);
+      })
       .then((model) => {
         sceneManager.displayModel('headphones');
         return model;
@@ -78,11 +80,14 @@ async function initHeadphones() {
         return null;
       });
 
-    // Wait for smooth progress animation and model loading with a 6.0s safety ceiling
+    // Wait for model loading with a 3.6s maximum ceiling so the visitor is NEVER stalled
     await Promise.race([
-      Promise.all([loader.complete(), modelPromise]),
-      new Promise((resolve) => setTimeout(resolve, 6000)),
+      modelPromise,
+      new Promise((resolve) => setTimeout(resolve, 3600)),
     ]);
+
+    // Complete the loading bar smoothly to 100% and initiate entrance
+    await loader.complete();
 
     // Ensure model is displayed in the scene
     sceneManager.displayModel('headphones');
@@ -916,6 +921,10 @@ async function initHeadphones() {
     } catch (e) {
       document.getElementById('aether-loader')?.remove();
     }
+    gsap.to(
+      ['#chapter-hero h1', '#chapter-hero p', '#chapter-hero .btn-hero-explore', '#chapter-hero .font-mono', '#main-nav', '#top-timeline-track'],
+      { opacity: 1, y: 0, duration: 0.5 }
+    );
   }
 }
 

@@ -720,7 +720,7 @@ export class SceneManager {
     this.renderer.setPixelRatio(dpr);
   }
 
-  async loadModel(key, url, scaleFactor = 1, yOffset = 0) {
+  async loadModel(key, url, scaleFactor = 1, yOffset = 0, onProgress = null) {
     if (this.models.has(key)) {
       return this.models.get(key);
     }
@@ -990,7 +990,11 @@ export class SceneManager {
           resolve(fallback);
         }
       },
-        undefined,
+        (xhr) => {
+          if (onProgress && xhr.total > 0) {
+            onProgress(xhr.loaded / xhr.total);
+          }
+        },
         (error) => {
           console.error(`Error loading model ${key}:`, error);
           reject(error);
@@ -1000,14 +1004,18 @@ export class SceneManager {
   }
 
   displayModel(key) {
-    this.modelContainer.clear();
-
     const model = this.models.get(key);
-    if (model) {
-      this.currentModelKey = key;
-      this.modelContainer.add(model);
-      this.dragRotation = { x: 0, y: 0 };
-      this.dragVelocity = { x: 0, y: 0 };
+    if (!model) return;
+
+    if (this.currentModelKey === key && this.modelContainer.children.includes(model)) {
+      return;
+    }
+
+    this.modelContainer.clear();
+    this.currentModelKey = key;
+    this.modelContainer.add(model);
+    this.dragRotation = { x: 0, y: 0 };
+    this.dragVelocity = { x: 0, y: 0 };
 
       // Apply tailored studio illumination when displaying mouse matching reference photography
       if (key === 'mouse') {
@@ -1036,7 +1044,6 @@ export class SceneManager {
           this.upLight.intensity = 0.35;
         }
       }
-    }
   }
 
   setPartOffset(partName, offsetX = 0, offsetY = 0, offsetZ = 0) {
