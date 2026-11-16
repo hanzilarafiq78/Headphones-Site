@@ -95,11 +95,24 @@ async function initHeadphones() {
         return null;
       });
 
-    // Wait for model loading with a 7.0s maximum ceiling so the visitor is NEVER stalled
-    await Promise.race([
-      modelPromise,
-      new Promise((resolve) => setTimeout(resolve, 7000)),
-    ]);
+    // Wait for the 3D model to load so it is immediately visible on entrance
+    let loadedModel = null;
+    try {
+      loadedModel = await Promise.race([
+        modelPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 10000)),
+      ]);
+    } catch (err) {
+      console.warn('3D Model deferred or timed out:', err);
+    }
+
+    if (loadedModel) {
+      sceneManager.displayModel('headphones');
+      // Warm up Three.js renderer before parting curtains so the model is 100% visible immediately
+      try {
+        sceneManager.renderer.render(sceneManager.scene, sceneManager.camera);
+      } catch (e) {}
+    }
 
     // Complete the loading bar smoothly to 100% and initiate entrance
     await loader.complete();

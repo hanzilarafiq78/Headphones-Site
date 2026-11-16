@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import gsap from 'gsap';
 
 export class SceneManager {
@@ -94,6 +95,12 @@ export class SceneManager {
     this.scene.add(this.modelContainer);
 
     this.loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) || '/';
+    const dracoPath = `${base.replace(/\/+$/, '')}/draco/`.replace(/^\/\//, '/');
+    dracoLoader.setDecoderPath(dracoPath);
+    this.loader.setDRACOLoader(dracoLoader);
+    this.dracoLoader = dracoLoader;
   }
 
   setupStudioEnvironment() {
