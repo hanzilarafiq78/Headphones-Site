@@ -726,12 +726,13 @@ export class SceneManager {
     }
 
     return new Promise((resolve, reject) => {
-      this.loader.load(
-        url,
-        (gltf) => {
-          let wrapper = null;
-          try {
-            const rawModel = gltf.scene;
+      let wrapper = null;
+      const doLoad = (targetUrl, isRetry = false) => {
+        this.loader.load(
+          targetUrl,
+          (gltf) => {
+            try {
+              const rawModel = gltf.scene;
 
           // 1. Compute exact geometric bounds of raw model
           const box = new THREE.Box3().setFromObject(rawModel);
@@ -740,7 +741,7 @@ export class SceneManager {
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
           // 2. Wrap in pivot-centered parent group
-          const wrapper = new THREE.Group();
+          wrapper = new THREE.Group();
           wrapper.name = key + '_wrapper';
 
           // Center the rawModel at wrapper origin (0, 0, 0)
@@ -996,10 +997,20 @@ export class SceneManager {
           }
         },
         (error) => {
-          console.error(`Error loading model ${key}:`, error);
-          reject(error);
+          if (!isRetry) {
+            const fallbackUrl = targetUrl.startsWith('/')
+              ? '.' + targetUrl
+              : '/' + targetUrl.replace(/^\.\//, '');
+            console.warn(`Initial model load failed for ${targetUrl}, trying fallback ${fallbackUrl}...`);
+            doLoad(fallbackUrl, true);
+          } else {
+            console.error(`Error loading model ${key}:`, error);
+            reject(error);
+          }
         }
       );
+    };
+    doLoad(url);
     });
   }
 
@@ -1008,12 +1019,17 @@ export class SceneManager {
     if (!model) return;
 
     if (this.currentModelKey === key && this.modelContainer.children.includes(model)) {
+      model.visible = true;
+      this.modelContainer.visible = true;
       return;
     }
 
     this.modelContainer.clear();
     this.currentModelKey = key;
+    model.visible = true;
+    this.modelContainer.visible = true;
     this.modelContainer.add(model);
+    this.modelContainer.updateMatrixWorld(true);
     this.dragRotation = { x: 0, y: 0 };
     this.dragVelocity = { x: 0, y: 0 };
 

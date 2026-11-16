@@ -16,7 +16,7 @@ export class AetherLoader {
         console.warn('Loader safety watchdog triggered');
         this.revealHero();
       }
-    }, 4500);
+    }, 8500);
   }
 
   createDOM() {

@@ -71,13 +71,23 @@ async function initHeadphones() {
   });
 
   try {
+    // Determine canonical model URL supporting any deployment root or base path
+    const base = import.meta.env.BASE_URL || '/';
+    const modelPath = `${base.replace(/\/+$/, '')}/models/headphones.glb`.replace(/^\/\//, '/');
+
     // Load 3D model in parallel with the smooth progress meter
     const modelPromise = sceneManager
-      .loadModel('headphones', '/models/headphones.glb', 0.894, 0, (ratio) => {
+      .loadModel('headphones', modelPath, 0.894, 0, (ratio) => {
         loader.updateDownloadProgress(ratio);
       })
       .then((model) => {
-        sceneManager.displayModel('headphones');
+        if (model) {
+          sceneManager.displayModel('headphones');
+          model.visible = true;
+          if (sceneManager.modelContainer) {
+            sceneManager.modelContainer.visible = true;
+          }
+        }
         return model;
       })
       .catch((err) => {
@@ -85,10 +95,10 @@ async function initHeadphones() {
         return null;
       });
 
-    // Wait for model loading with a 3.6s maximum ceiling so the visitor is NEVER stalled
+    // Wait for model loading with a 7.0s maximum ceiling so the visitor is NEVER stalled
     await Promise.race([
       modelPromise,
-      new Promise((resolve) => setTimeout(resolve, 3600)),
+      new Promise((resolve) => setTimeout(resolve, 7000)),
     ]);
 
     // Complete the loading bar smoothly to 100% and initiate entrance
