@@ -65,18 +65,23 @@ async function initHeadphones() {
     // Load 3D model in parallel with the smooth progress meter
     const modelPromise = sceneManager
       .loadModel('headphones', '/models/headphones.glb', 0.894, 0)
-      .then(() => {
+      .then((model) => {
         sceneManager.displayModel('headphones');
+        return model;
       })
       .catch((err) => {
         console.warn('3D Model deferred or error:', err);
+        return null;
       });
 
-    // Wait for smooth progress animation and model loading with a 3.2s safety ceiling
+    // Wait for smooth progress animation and model loading with a 5.0s safety ceiling
     await Promise.race([
       Promise.all([loader.complete(), modelPromise]),
-      new Promise((resolve) => setTimeout(resolve, 3200)),
+      new Promise((resolve) => setTimeout(resolve, 5000)),
     ]);
+
+    // Ensure model is displayed in the scene
+    sceneManager.displayModel('headphones');
 
     // Luxury Entrance Reveal Sequence
     loader.revealHero({
@@ -720,13 +725,6 @@ async function initHeadphones() {
       });
     });
 
-    // --- Click sound on color swatches ---
-    colorBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        try { sound.playSwitchClick(); } catch { }
-      });
-    });
-
     // --- Parallax tilt on modal panel (subtle, dampened) ---
     const modalPanel = document.querySelector('#reservation-modal .glass-panel');
     if (modalPanel) {
@@ -830,6 +828,7 @@ async function initHeadphones() {
     colorBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        try { sound.playSwitchClick(); } catch { }
         const color = btn.dataset.color;
         const name = btn.dataset.name || color.toUpperCase();
 

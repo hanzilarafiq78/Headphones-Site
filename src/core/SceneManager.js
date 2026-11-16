@@ -729,7 +729,9 @@ export class SceneManager {
       this.loader.load(
         url,
         (gltf) => {
-          const rawModel = gltf.scene;
+          let wrapper = null;
+          try {
+            const rawModel = gltf.scene;
 
           // 1. Compute exact geometric bounds of raw model
           const box = new THREE.Box3().setFromObject(rawModel);
@@ -981,7 +983,13 @@ export class SceneManager {
           this.initialMeshTransforms.set(key, transforms);
           this.models.set(key, wrapper);
           resolve(wrapper);
-        },
+        } catch (err) {
+          console.error(`Error processing model ${key}:`, err);
+          const fallback = wrapper || gltf.scene;
+          this.models.set(key, fallback);
+          resolve(fallback);
+        }
+      },
         undefined,
         (error) => {
           console.error(`Error loading model ${key}:`, error);
