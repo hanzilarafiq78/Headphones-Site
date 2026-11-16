@@ -60,11 +60,18 @@ export function setupNavigation(scrollRig) {
 
   // Handle smooth scroll to chapters
   const scrollToChapter = (progress) => {
+    const mainFooter = document.getElementById('main-footer');
+    if (mainFooter) {
+      mainFooter.scrollTop = 0;
+      if (progress < 0.89) {
+        mainFooter.style.pointerEvents = 'none';
+      }
+    }
     const track = document.getElementById('story-track');
     const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
-    const targetY = maxScroll * progress;
+    const targetY = maxScroll * Math.max(0, Math.min(1, progress));
     if (scrollRig && scrollRig.lenis) {
-      scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
+      scrollRig.lenis.scrollTo(targetY, { duration: 2.2, force: true, lock: false });
     } else {
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }

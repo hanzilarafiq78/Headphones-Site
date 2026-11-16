@@ -785,6 +785,7 @@
   inset: -3px;
   border-radius: 50%;
   border: 1px solid transparent;
+  pointer-events: none;
   transition: border-color 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -892,6 +893,9 @@ footer a[target="_blank"]:hover {
 /* --- Back to Top Button --- */
 #back-to-top {
   position: relative;
+  pointer-events: auto;
+  z-index: 50;
+  cursor: pointer;
   transition: color 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), letter-spacing 0.5s ease;
 }
 

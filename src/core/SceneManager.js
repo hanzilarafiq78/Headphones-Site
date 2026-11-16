@@ -1323,96 +1323,143 @@ export class SceneManager {
 
     model.traverse((child) => {
       if (child.isMesh && child.material) {
-        const mat = child.material;
-        const name = (mat.name || '').toLowerCase();
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
 
-        if (isHeadphones) {
-          const isMetal = name.includes('metal') || name.includes('steel');
-          const isShell = name.includes('shell') || name.includes('plastic');
-          const isLeather = name.includes('leather') || name.includes('skin') || name.includes('fabric');
-          const isAccents = name.includes('led') || name.includes('vibrator') || name.includes('bluetooth') || name.includes('stiches');
+        materials.forEach((mat) => {
+          if (!mat) return;
+          const matName = (mat.name || '').toLowerCase();
+          const nodeName = (child.name || '').toLowerCase();
+          const name = matName + ' ' + nodeName;
 
-          switch (colorway) {
-            case 'frost':
-              if (isMetal) {
-                mat.color.set(0xF0F4F8);
-                mat.roughness = 0.18;
-                mat.metalness = 0.95;
-              } else if (isShell) {
-                mat.color.set(0xD2D8E0);
-                mat.roughness = 0.28;
-                mat.metalness = 0.70;
-              } else if (isLeather) {
-                mat.color.set(0xA4ABB5);
-                mat.roughness = 0.65;
-                mat.metalness = 0.05;
-              } else {
-                mat.color.set(0xDFE6EC);
-                mat.roughness = 0.25;
-                mat.metalness = 0.80;
-              }
-              if (mat.emissive) mat.emissive.set(0x000000);
-              break;
+          if (isHeadphones) {
+            const isMetal = name.includes('metal') || name.includes('steel') || name.includes('yoke') || name.includes('extension') || name.includes('port');
+            const isShell = name.includes('shell') || name.includes('plastic') || name.includes('chassis') || name.includes('button');
+            const isLeather = name.includes('leather') || name.includes('skin') || name.includes('fabric') || name.includes('cushion') || name.includes('headband_frame');
+            const isLed = name.includes('led') || name.includes('emission');
+            const isAccents = name.includes('vibrator') || name.includes('driver') || name.includes('stitch') || name.includes('stiches') || name.includes('decal') || name.includes('icon');
 
-            case 'brass':
-              if (isMetal) {
-                mat.color.set(0xD4AF37);
-                mat.roughness = 0.22;
-                mat.metalness = 0.95;
-              } else if (isShell) {
-                mat.color.set(0xC2B095);
-                mat.roughness = 0.32;
-                mat.metalness = 0.65;
-              } else if (isLeather) {
-                mat.color.set(0x352E28);
-                mat.roughness = 0.65;
-                mat.metalness = 0.02;
-              } else {
-                mat.color.set(0x8C7853);
-                mat.roughness = 0.30;
-                mat.metalness = 0.60;
-              }
-              if (mat.emissive) mat.emissive.set(0x000000);
-              break;
-
-            case 'cyber':
-              if (name.includes('led') || name.includes('vibrator')) {
-                mat.color.set(0x00F0FF);
-                mat.emissive = new THREE.Color(0x00F0FF);
-                mat.emissiveIntensity = 2.5;
-              } else if (isShell) {
-                mat.color.set(0x0B1220);
-                mat.roughness = 0.28;
-                mat.metalness = 0.85;
-              } else if (isMetal) {
-                mat.color.set(0x1C2230);
-                mat.roughness = 0.24;
-                mat.metalness = 0.92;
-              } else {
-                mat.color.set(0x10131A);
-                mat.roughness = 0.55;
-                mat.metalness = 0.15;
-              }
-              break;
-
-            case 'obsidian':
-            default:
-              if (child.userData.originalColor) {
-                mat.color.copy(child.userData.originalColor);
-              }
-              mat.roughness = child.userData.originalRoughness;
-              mat.metalness = child.userData.originalMetalness;
-              if (mat.emissive) {
-                if (name.includes('led')) {
-                  mat.emissive.set(0x7ce1ff);
-                  mat.emissiveIntensity = 1.0;
+            switch (colorway) {
+              case 'frost':
+                if (isLed) {
+                  mat.color.set(0x7CE1FF);
+                  if (mat.emissive) {
+                    mat.emissive.set(0x7CE1FF);
+                    mat.emissiveIntensity = 2.0;
+                  }
+                } else if (isMetal) {
+                  mat.color.set(0xF2F6FA);
+                  mat.roughness = 0.16;
+                  mat.metalness = 0.96;
+                } else if (isShell) {
+                  mat.color.set(0xDEE4EC);
+                  mat.roughness = 0.22;
+                  mat.metalness = 0.65;
+                } else if (isLeather) {
+                  mat.color.set(0xACB4C0);
+                  mat.roughness = 0.58;
+                  mat.metalness = 0.05;
+                } else if (isAccents) {
+                  mat.color.set(0xE0E6EE);
+                  mat.roughness = 0.22;
+                  mat.metalness = 0.88;
                 } else {
-                  mat.emissive.set(0x000000);
+                  mat.color.set(0xE0E6EE);
+                  mat.roughness = 0.25;
+                  mat.metalness = 0.75;
                 }
-              }
-              break;
-          }
-        } else if (isMouse) {
+                if (!isLed && mat.emissive) mat.emissive.set(0x000000);
+                mat.needsUpdate = true;
+                break;
+
+              case 'brass':
+                if (isLed) {
+                  mat.color.set(0xFFBF69);
+                  if (mat.emissive) {
+                    mat.emissive.set(0xFFBF69);
+                    mat.emissiveIntensity = 2.0;
+                  }
+                } else if (isMetal) {
+                  mat.color.set(0xD4AF37);
+                  mat.roughness = 0.18;
+                  mat.metalness = 0.95;
+                } else if (isShell) {
+                  mat.color.set(0xD5C9B6);
+                  mat.roughness = 0.28;
+                  mat.metalness = 0.55;
+                } else if (isLeather) {
+                  mat.color.set(0x2E241E);
+                  mat.roughness = 0.62;
+                  mat.metalness = 0.04;
+                } else if (isAccents) {
+                  mat.color.set(0xC5A059);
+                  mat.roughness = 0.24;
+                  mat.metalness = 0.90;
+                } else {
+                  mat.color.set(0x8C7853);
+                  mat.roughness = 0.30;
+                  mat.metalness = 0.60;
+                }
+                if (!isLed && mat.emissive) mat.emissive.set(0x000000);
+                mat.needsUpdate = true;
+                break;
+
+              case 'cyber':
+                if (isLed || name.includes('vibrator')) {
+                  mat.color.set(0x00F0FF);
+                  if (mat.emissive) {
+                    mat.emissive.set(0x00F0FF);
+                    mat.emissiveIntensity = 3.5;
+                  }
+                } else if (isShell) {
+                  mat.color.set(0x0E2442);
+                  mat.roughness = 0.22;
+                  mat.metalness = 0.80;
+                } else if (isMetal) {
+                  mat.color.set(0x1C2B3E);
+                  mat.roughness = 0.18;
+                  mat.metalness = 0.94;
+                } else if (isLeather) {
+                  mat.color.set(0x0A1422);
+                  mat.roughness = 0.55;
+                  mat.metalness = 0.08;
+                } else if (isAccents) {
+                  mat.color.set(0x00E5FF);
+                  mat.roughness = 0.20;
+                  mat.metalness = 0.90;
+                  if (mat.emissive) {
+                    mat.emissive.set(0x00B4D8);
+                    mat.emissiveIntensity = 0.8;
+                  }
+                } else {
+                  mat.color.set(0x0A121E);
+                  mat.roughness = 0.45;
+                  mat.metalness = 0.35;
+                }
+                if (!isLed && !isAccents && !name.includes('vibrator') && mat.emissive) mat.emissive.set(0x000000);
+                mat.needsUpdate = true;
+                break;
+
+              case 'obsidian':
+              default:
+                if (child.userData.originalColor) {
+                  mat.color.copy(child.userData.originalColor);
+                } else {
+                  mat.color.set(0x16171A);
+                }
+                mat.roughness = child.userData.originalRoughness !== undefined ? child.userData.originalRoughness : 0.35;
+                mat.metalness = child.userData.originalMetalness !== undefined ? child.userData.originalMetalness : 0.50;
+                if (mat.emissive) {
+                  if (isLed) {
+                    mat.emissive.set(0x7ce1ff);
+                    mat.emissiveIntensity = 1.0;
+                  } else {
+                    mat.emissive.set(0x000000);
+                  }
+                }
+                mat.needsUpdate = true;
+                break;
+            }
+          } else if (isMouse) {
           const isDiffuser = name.includes('svetlo') || name.includes('diffuser') || name.includes('led');
           const isSensor = name.includes('glass') || name.includes('sensor');
           const isAccent = name.includes('axle') || name.includes('logo') || name.includes('metal') || name.includes('wheel');
@@ -1544,8 +1591,9 @@ export class SceneManager {
               }
               break;
           }
-        }
-        mat.needsUpdate = true;
+          }
+          mat.needsUpdate = true;
+        });
       }
     });
   }

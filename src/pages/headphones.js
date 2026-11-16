@@ -496,7 +496,7 @@ async function initHeadphones() {
         ease: 'sine.inOut',
         duration: 45,
       }, 515)
-      .set('#chapter-craft', { pointerEvents: 'none' }, 560);
+      .set('#chapter-craft', { pointerEvents: 'none' }, 530);
 
     // -------------------------------------------------------------------------
     // SEGMENT 05: THE ARTIFACT & FINALE (545 - 655)
@@ -589,6 +589,9 @@ async function initHeadphones() {
         ease: 'sine.inOut',
         duration: 50,
       }, 645)
+      // Ensure footer is interactive as soon as it rises
+      .set('#main-footer', { pointerEvents: 'none' }, 640)
+      .set('#main-footer', { pointerEvents: 'auto' }, 645)
       // The footer rises smoothly and slowly over Chapter 05 like a luxurious blanket
       .to('#main-footer', {
         yPercent: 0,
@@ -793,31 +796,63 @@ async function initHeadphones() {
       });
     }
 
-    // Storyline navigation links (in footer and elsewhere)
-    const footerStoryLinks = document.querySelectorAll('.nav-chapter-link');
+    // =========================================================================
+    // FOOTER INTERACTIVE STORYLINE NAVIGATION & BACK TO TOP
+    // =========================================================================
     const CHAPTER_PROGRESS = {
       arrival: 0.0,
       resonance: 0.21,
       immersion: 0.39,
       craft: 0.59,
       artifact: 0.85,
-      specs: 1.0,
     };
+
+    const navigateFromFooter = (targetProgress) => {
+      try { sound.playClick(); } catch { }
+
+      const mainFooter = document.getElementById('main-footer');
+      if (mainFooter) {
+        // Immediate synchronous reset of internal scroll position
+        // (Avoid calling element.scrollTo({ behavior: 'smooth' }) which interrupts Lenis window scroll)
+        mainFooter.scrollTop = 0;
+        if (targetProgress < 0.89) {
+          mainFooter.style.pointerEvents = 'none';
+        }
+      }
+
+      const track = document.getElementById('story-track');
+      const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
+      const targetY = maxScroll * Math.max(0, Math.min(1, targetProgress));
+
+      if (scrollRig && scrollRig.lenis) {
+        scrollRig.lenis.scrollTo(targetY, {
+          duration: 2.2,
+          force: true,
+          lock: false,
+        });
+      } else {
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      }
+    };
+
+    const footerStoryLinks = document.querySelectorAll('.nav-chapter-link');
     footerStoryLinks.forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const ch = link.dataset.chapter;
         const prog = CHAPTER_PROGRESS[ch] ?? 0;
-        const track = document.getElementById('story-track');
-        const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
-        const targetY = maxScroll * prog;
-        if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(targetY, { duration: 2.6 });
-        } else {
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
-        }
+        navigateFromFooter(prog);
       });
     });
+
+    const backToTopBtn = document.getElementById('back-to-top');
+    if (backToTopBtn) {
+      backToTopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        gsap.fromTo(backToTopBtn, { scale: 0.92, y: -2 }, { scale: 1, y: 0, duration: 0.4, ease: 'back.out(2)' });
+        navigateFromFooter(0.0);
+      });
+    }
 
     if (confirmReserve) {
       confirmReserve.addEventListener('click', () => {
@@ -845,13 +880,16 @@ async function initHeadphones() {
         const name = btn.dataset.name || color.toUpperCase();
 
         colorBtns.forEach((b) => {
-          b.classList.remove('border-white');
+          b.classList.remove('border-white', 'scale-110');
           b.classList.add('border-transparent');
         });
         btn.classList.remove('border-transparent');
-        btn.classList.add('border-white');
+        btn.classList.add('border-white', 'scale-110');
 
-        if (colorLabel) colorLabel.textContent = name;
+        if (colorLabel) {
+          colorLabel.textContent = name;
+          gsap.fromTo(colorLabel, { opacity: 0.35, x: -4 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out' });
+        }
         sceneManager.setColorway(color);
       });
     });
@@ -869,34 +907,7 @@ async function initHeadphones() {
       });
     }
 
-    // =========================================================================
-    // FOOTER INTERACTIVE HANDLERS (BACK TO TOP & EXPLORE)
-    // =========================================================================
-    const backToTopBtn = document.getElementById('back-to-top');
-    if (backToTopBtn) {
-      backToTopBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(0, { duration: 2.6 });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-    }
 
-    const footerExploreBtns = document.querySelectorAll('.btn-footer-explore');
-    footerExploreBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const track = document.getElementById('story-track');
-        const maxScroll = track ? track.scrollHeight - window.innerHeight : 0;
-        if (scrollRig && scrollRig.lenis) {
-          scrollRig.lenis.scrollTo(maxScroll, { duration: 2.6 });
-        } else {
-          window.scrollTo({ top: maxScroll, behavior: 'smooth' });
-        }
-      });
-    });
 
   } catch (err) {
     console.error('Error initializing headphones page:', err);
